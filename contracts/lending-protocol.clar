@@ -142,3 +142,58 @@
         )
     )
 )
+
+;; Liquidation Functions
+
+;; Liquidate an under-collateralized position
+(define-public (liquidate (token-contract <sip-010-trait>) (user principal) (amount uint))
+    (let
+        (
+            (liquidator tx-sender)
+            (user-borrow (default-to { amount: u0, collateral: u0 } (map-get? user-borrows { user: user })))
+            (borrow-amount (get amount user-borrow))
+            (collateral-amount (get collateral user-borrow))
+        )
+        (asserts! (can-liquidate user borrow-amount collateral-amount) ERR-LIQUIDATION-FAILED)
+        
+        (match (contract-call? token-contract transfer amount liquidator (as-contract tx-sender) none)
+            success
+                (begin
+                    (let
+                        (
+                            (reward (calculate-liquidation-reward amount collateral-amount))
+                            (current-rewards (default-to { amount: u0 } (map-get? liquidator-rewards { liquidator: liquidator })))
+                        )
+                        (map-set liquidator-rewards
+                            { liquidator: liquidator }
+                            { amount: (+ (get amount current-rewards) reward) }
+                        )
+                        (map-set user-borrows
+                            { user: user }
+                            { amount: (- borrow-amount amount), collateral: (- collateral-amount reward) }
+                        )
+                        (ok true)
+                    )
+                )
+            error (err ERR-INSUFFICIENT-BALANCE)
+        )
+    )
+)
+
+;; Claim accumulated liquidation rewards
+(define-public (claim-rewards (token-contract <sip-010-trait>))
+    (let
+        (
+            (liquidator tx-sender)
+            (rewards (default-to { amount: u0 } (map-get? liquidator-rewards { liquidator: liquidator })))
+            (reward-amount (get amount rewards))
+        )
+        (asserts! (> reward-amount u0) ERR-INSUFFICIENT-BALANCE)
+        
+        (map-set liquidator-rewards
+            { liquidator: liquidator }
+            { amount: u0 }
+        )
+        (ok true)
+    )
+)
