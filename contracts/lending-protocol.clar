@@ -19,6 +19,10 @@
 
 ;; Protocol Parameters
 (define-constant MIN-COLLATERAL-RATIO u150)  ;; 150% minimum collateralization ratio
+(define-constant MAX-INTEREST-RATE u10000)  ;; 100% in basis points
+(define-constant MIN-INTEREST-RATE u100)    ;; 1% in basis points
+(define-constant MAX-LIQUIDATION-THRESHOLD u9500)  ;; 95% in basis points
+(define-constant MIN-LIQUIDATION-THRESHOLD u7000)  ;; 70% in basis points
 
 ;; Protocol State
 (define-data-var contract-owner principal tx-sender)
@@ -27,6 +31,7 @@
 (define-data-var total-borrows uint u0)
 (define-data-var interest-rate uint u500)  ;; 5% APR in basis points
 (define-data-var liquidation-threshold uint u8000)  ;; 80% threshold in basis points
+(define-data-var allowed-token principal 'SP000000000000000000002Q6VF78.token)
 
 ;; Storage Maps
 (define-map user-deposits 
@@ -58,6 +63,16 @@
 ;; Authorization
 (define-private (is-contract-owner)
     (is-eq tx-sender (var-get contract-owner))
+)
+
+;; Validate token contract
+(define-private (is-valid-token (token-contract <sip-010-trait>))
+    (is-eq (contract-of token-contract) (var-get allowed-token))
+)
+
+;; Safe arithmetic operations
+(define-private (safe-subtract (a uint) (b uint))
+    (ok (if (>= a b) (- a b) u0))
 )
 
 ;; Core Protocol Functions
