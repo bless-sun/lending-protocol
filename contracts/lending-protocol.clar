@@ -236,3 +236,24 @@
         )
     )
 )
+
+;; Read-Only Functions
+
+;; Get user deposit information
+(define-read-only (get-user-deposits (user principal))
+    (default-to { amount: u0 } (map-get? user-deposits { user: user }))
+)
+
+;; Get user borrow information
+(define-read-only (get-user-borrows (user principal))
+    (default-to { amount: u0, collateral: u0 } (map-get? user-borrows { user: user }))
+)
+
+;; Get protocol statistics
+(define-read-only (get-protocol-stats)
+    {
+        total-deposits: (var-get total-deposits),
+        total-borrows: (var-get total-borrows),
+        interest-rate: (var-get interest-rate)
+    }
+)
