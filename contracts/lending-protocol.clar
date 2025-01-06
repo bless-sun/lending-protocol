@@ -257,3 +257,41 @@
         interest-rate: (var-get interest-rate)
     }
 )
+
+;; Administrative Functions
+
+;; Update protocol interest rate
+(define-public (set-interest-rate (new-rate uint))
+    (begin
+        (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (var-set interest-rate new-rate)
+        (ok true)
+    )
+)
+
+;; Update liquidation threshold
+(define-public (set-liquidation-threshold (new-threshold uint))
+    (begin
+        (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (var-set liquidation-threshold new-threshold)
+        (ok true)
+    )
+)
+
+;; Pause protocol operations
+(define-public (pause-protocol)
+    (begin
+        (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (var-set protocol-paused true)
+        (ok true)
+    )
+)
+
+;; Resume protocol operations
+(define-public (unpause-protocol)
+    (begin
+        (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (var-set protocol-paused false)
+        (ok true)
+    )
+)
