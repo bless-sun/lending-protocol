@@ -222,3 +222,17 @@
 (define-private (is-collateral-sufficient (collateral-value uint) (borrow-value uint))
     (>= (* collateral-value MIN-COLLATERAL-RATIO) (* borrow-value u100))
 )
+
+;; Calculate liquidation reward amount
+(define-private (calculate-liquidation-reward (liquidation-amount uint) (collateral-amount uint))
+    (let
+        (
+            (base-reward (* liquidation-amount u105))  ;; 5% bonus
+            (max-reward (* collateral-amount u50))     ;; Max 50% of collateral
+        )
+        (if (> base-reward max-reward)
+            max-reward
+            base-reward
+        )
+    )
+)
