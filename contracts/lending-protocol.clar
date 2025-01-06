@@ -94,6 +94,7 @@
         )
         (asserts! (> amount u0) ERR-INVALID-AMOUNT)
         (asserts! (not (var-get protocol-paused)) ERR-NOT-INITIALIZED)
+        (asserts! (is-valid-token token-contract) ERR-NOT-AUTHORIZED)
         
         (match (contract-call? token-contract transfer amount sender (as-contract tx-sender) none)
             success
