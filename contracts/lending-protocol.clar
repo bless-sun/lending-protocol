@@ -280,6 +280,7 @@
 (define-public (set-interest-rate (new-rate uint))
     (begin
         (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (asserts! (and (>= new-rate MIN-INTEREST-RATE) (<= new-rate MAX-INTEREST-RATE)) ERR-INVALID-AMOUNT)
         (var-set interest-rate new-rate)
         (ok true)
     )
@@ -289,6 +290,9 @@
 (define-public (set-liquidation-threshold (new-threshold uint))
     (begin
         (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (asserts! (and (>= new-threshold MIN-LIQUIDATION-THRESHOLD) 
+                      (<= new-threshold MAX-LIQUIDATION-THRESHOLD)) 
+                 ERR-INVALID-AMOUNT)
         (var-set liquidation-threshold new-threshold)
         (ok true)
     )
