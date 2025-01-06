@@ -16,3 +16,14 @@
 (define-constant ERR-ALREADY-INITIALIZED (err u104))
 (define-constant ERR-NOT-INITIALIZED (err u105))
 (define-constant ERR-LIQUIDATION-FAILED (err u106))
+
+;; Protocol Parameters
+(define-constant MIN-COLLATERAL-RATIO u150)  ;; 150% minimum collateralization ratio
+
+;; Protocol State
+(define-data-var contract-owner principal tx-sender)
+(define-data-var protocol-paused bool false)
+(define-data-var total-deposits uint u0)
+(define-data-var total-borrows uint u0)
+(define-data-var interest-rate uint u500)  ;; 5% APR in basis points
+(define-data-var liquidation-threshold uint u8000)  ;; 80% threshold in basis points
