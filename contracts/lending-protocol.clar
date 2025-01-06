@@ -27,3 +27,22 @@
 (define-data-var total-borrows uint u0)
 (define-data-var interest-rate uint u500)  ;; 5% APR in basis points
 (define-data-var liquidation-threshold uint u8000)  ;; 80% threshold in basis points
+
+;; Storage Maps
+(define-map user-deposits 
+    { user: principal } 
+    { amount: uint }
+)
+
+(define-map user-borrows 
+    { user: principal } 
+    { 
+        amount: uint, 
+        collateral: uint 
+    }
+)
+
+(define-map liquidator-rewards 
+    { liquidator: principal } 
+    { amount: uint }
+)
