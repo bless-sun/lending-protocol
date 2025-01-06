@@ -59,3 +59,38 @@
 (define-private (is-contract-owner)
     (is-eq tx-sender (var-get contract-owner))
 )
+
+;; Core Protocol Functions
+
+;; Initialize the protocol with the specified token contract
+(define-public (initialize (token-contract <sip-010-trait>))
+    (begin
+        (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
+        (ok true)
+    )
+)
+
+;; Deposit sBTC as collateral
+(define-public (deposit-collateral (token-contract <sip-010-trait>) (amount uint))
+    (let
+        (
+            (sender tx-sender)
+            (current-deposit (default-to { amount: u0 } (map-get? user-deposits { user: sender })))
+        )
+        (asserts! (> amount u0) ERR-INVALID-AMOUNT)
+        (asserts! (not (var-get protocol-paused)) ERR-NOT-INITIALIZED)
+        
+        (match (contract-call? token-contract transfer amount sender (as-contract tx-sender) none)
+            success
+                (begin
+                    (map-set user-deposits
+                        { user: sender }
+                        { amount: (+ amount (get amount current-deposit)) }
+                    )
+                    (var-set total-deposits (+ (var-get total-deposits) amount))
+                    (ok true)
+                )
+            error (err ERR-INSUFFICIENT-BALANCE)
+        )
+    )
+)
