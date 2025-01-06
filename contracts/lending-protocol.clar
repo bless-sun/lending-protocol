@@ -23,6 +23,7 @@
 (define-constant MIN-INTEREST-RATE u100)    ;; 1% in basis points
 (define-constant MAX-LIQUIDATION-THRESHOLD u9500)  ;; 95% in basis points
 (define-constant MIN-LIQUIDATION-THRESHOLD u7000)  ;; 70% in basis points
+(define-constant MAX-REWARD-MULTIPLIER u120)  ;; 120% maximum reward multiplier
 
 ;; Protocol State
 (define-data-var contract-owner principal tx-sender)
@@ -32,6 +33,7 @@
 (define-data-var interest-rate uint u500)  ;; 5% APR in basis points
 (define-data-var liquidation-threshold uint u8000)  ;; 80% threshold in basis points
 (define-data-var allowed-token principal 'SP000000000000000000002Q6VF78.token)
+
 
 ;; Storage Maps
 (define-map user-deposits 
@@ -73,6 +75,21 @@
 ;; Safe arithmetic operations
 (define-private (safe-subtract (a uint) (b uint))
     (ok (if (>= a b) (- a b) u0))
+)
+
+(define-private (safe-add (a uint) (b uint))
+    (let ((sum (+ a b)))
+        (asserts! (>= sum a) (err u401))  ;; Check for overflow
+        (ok sum)
+    )
+)
+
+;; Safe multiplication with overflow check
+(define-private (safe-multiply (a uint) (b uint))
+    (let ((product (* a b)))
+        (asserts! (or (is-eq a u0) (is-eq (/ product a) b)) (err u402))  ;; Check for overflow
+        (ok product)
+    )
 )
 
 ;; Core Protocol Functions
@@ -143,6 +160,7 @@
             (borrow-amount (get amount user-borrow))
         )
         (asserts! (>= borrow-amount amount) ERR-INVALID-AMOUNT)
+        (asserts! (is-valid-token token-contract) ERR-NOT-AUTHORIZED)
         
         (match (contract-call? token-contract transfer amount sender (as-contract tx-sender) none)
             success
@@ -171,7 +189,9 @@
             (borrow-amount (get amount user-borrow))
             (collateral-amount (get collateral user-borrow))
         )
+        (asserts! (is-valid-token token-contract) ERR-NOT-AUTHORIZED)
         (asserts! (can-liquidate user borrow-amount collateral-amount) ERR-LIQUIDATION-FAILED)
+        (asserts! (<= amount borrow-amount) ERR-INVALID-AMOUNT)
         
         (match (contract-call? token-contract transfer amount liquidator (as-contract tx-sender) none)
             success
