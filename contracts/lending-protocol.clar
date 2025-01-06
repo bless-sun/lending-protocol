@@ -197,3 +197,28 @@
         (ok true)
     )
 )
+
+;; Helper Functions
+
+;; Check if a position can be liquidated
+(define-private (can-liquidate (user principal) (borrow-amount uint) (collateral-amount uint))
+    (let
+        (
+            (collateral-ratio (calculate-collateral-ratio borrow-amount collateral-amount))
+        )
+        (<= collateral-ratio (var-get liquidation-threshold))
+    )
+)
+
+;; Calculate the collateral ratio for a position
+(define-private (calculate-collateral-ratio (borrow-amount uint) (collateral-amount uint))
+    (if (is-eq borrow-amount u0)
+        u0
+        (* (/ (* collateral-amount u10000) borrow-amount) u100)
+    )
+)
+
+;; Verify if collateral is sufficient for a borrow
+(define-private (is-collateral-sufficient (collateral-value uint) (borrow-value uint))
+    (>= (* collateral-value MIN-COLLATERAL-RATIO) (* borrow-value u100))
+)
